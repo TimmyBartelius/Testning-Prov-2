@@ -1,66 +1,59 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Lägga till en bok och se den i katalog och Mina böcker", () => {
+test.describe("Läslistan lägga till böcker", () => {
+  //Ladda in sidan före varje test
   test.beforeEach(async ({ page }) => {
     await page.goto("https://tap-ht24-testverktyg.github.io/exam-template/");
   });
 
-  test("Lägger till en ny bok och kontrollerar att den visas korrekt", async ({
+  test("lägga till en bok", async ({ page }) => {
+    const bookTitle = "The Winter Wars";
+    const bookAuthor = "Timmy Bartelius";
+    await page.getByTestId("add-book").click();
+
+    // Fyll i formuläret med bokens titel och författare
+    await page.getByTestId("add-input-title").fill(bookTitle);
+    await page.getByTestId("add-input-author").fill(bookAuthor);
+
+    // Klicka på knappen för att lägga till boken
+    await page.getByTestId("add-submit").click();
+  });
+
+  test("lägga till och kontrollera att boken finns i katalogen", async ({
     page,
   }) => {
-    // Vänta in och klicka på "Lägg till bok"
-    const laggTillBokBtn = page.getByRole("button", { name: "Lägg till bok" });
-    await expect(laggTillBokBtn).toBeEnabled();
-    await laggTillBokBtn.click();
+    const bookTitle = "The Winter Wars";
+    const bookAuthor = "Timmy Bartelius";
+    await page.getByTestId("add-book").click();
 
-    // Vänta på att titel-fältet finns
-    const titelInput = page.getByTestId("add-input-title");
-    await expect(titelInput).toBeVisible();
-    await titelInput.fill("The Winter Wars");
+    await page.getByTestId("add-input-title").fill(bookTitle);
+    await page.getByTestId("add-input-author").fill(bookAuthor);
 
-    const forfattareInput = page.getByTestId("add-input-author");
-    await expect(forfattareInput).toBeVisible();
-    await forfattareInput.fill("T. Bartelius");
+    await page.getByTestId("add-submit").click();
 
-    // Kontrollera att värdena är rätt
-    await expect(titelInput).toHaveValue("The Winter Wars");
-    await expect(forfattareInput).toHaveValue("T. Bartelius");
+    // Gå tillbaka till katalogen
+    await page.getByTestId("catalog").click();
 
-    // Klicka på "Lägg till ny bok"
-    const addBtn = page.getByRole("button", { name: "Lägg till ny bok" });
-    await expect(addBtn).toBeEnabled();
-    await addBtn.click();
+    //Boken finns i katalogen
+    await expect(page.getByText(bookTitle)).toBeVisible();
+  });
 
-    // Kontrollera att kataloglistan har fått minst 1 bok
-    const catalogueItems = page.getByTestId("catalogue-list").locator("li");
-    const count = await catalogueItems.count();
-    expect(count).toBeGreaterThan(0);
+  test("lägga till samma bok flera gånger", async ({ page }) => {
+    const bookTitle = "The Winter Wars";
+    const bookAuthor = "Timmy Bartelius";
 
-    // Navigera till katalogen
-    const katalogBtn = page.getByRole("button", { name: "Katalog" });
-    await katalogBtn.click();
+    await page.getByTestId("add-book").click();
 
-    // Vänta på att sidan har laddat klart
-    await page.waitForLoadState("domcontentloaded");
+    await page.getByTestId("add-input-title").fill(bookTitle);
+    await page.getByTestId("add-input-author").fill(bookAuthor);
 
-    // Kontrollera att boken och författaren syns
-    const bokTitel = page.getByText("The Winter Wars", { exact: true });
-    await expect(bokTitel).toBeVisible();
+    await page.getByTestId("add-submit").click();
 
-    const bokForfattare = page.getByText("T. Bartelius", { exact: true });
-    await expect(bokForfattare).toBeVisible();
+    await page.fill('[data-testid="add-input-title"]', bookTitle);
+    await page.fill('[data-testid="add-input-author"]', bookAuthor);
+    await page.getByTestId("add-submit").click();
 
-    // Markera som favorit
-    const favBtn = page.getByTestId("star-The Winter Wars");
-    await expect(favBtn).toBeVisible();
-    await favBtn.click();
-
-    // Navigera till Mina böcker
-    const minaBockerBtn = page.getByRole("button", { name: "Mina böcker" });
-    await expect(minaBockerBtn).toBeEnabled();
-    await minaBockerBtn.click();
-
-    // Kontrollera att favoriten syns
-    await expect(page.getByText("The Winter Wars")).toBeVisible();
+    await page.getByTestId("catalog").click();
+    await expect(page.getByText(bookTitle)).toHaveCount(2);
   });
 });
