@@ -33,22 +33,22 @@ test.describe("Lägga till en bok och se den i katalog och Mina böcker", () => 
 
     // Kontrollera att kataloglistan har fått minst 1 bok
     const catalogueItems = page.getByTestId("catalogue-list").locator("li");
-    await expect(catalogueItems)
-      .toHaveCountGreaterThan(0)
-      .catch(async () => {
-        // fallback om toHaveCountGreaterThan saknas
-        const count = await catalogueItems.count();
-        expect(count).toBeGreaterThan(0);
-      });
+    const count = await catalogueItems.count();
+    expect(count).toBeGreaterThan(0);
 
     // Navigera till katalogen
     const katalogBtn = page.getByRole("button", { name: "Katalog" });
-    await expect(katalogBtn).toBeEnabled();
     await katalogBtn.click();
 
+    // Vänta på att sidan har laddat klart
+    await page.waitForLoadState("domcontentloaded");
+
     // Kontrollera att boken och författaren syns
-    await expect(page.getByText("The Winter Wars").first()).toBeVisible();
-    await expect(page.getByText("T. Bartelius")).toBeVisible();
+    const bokTitel = page.getByText("The Winter Wars", { exact: true });
+    await expect(bokTitel).toBeVisible();
+
+    const bokForfattare = page.getByText("T. Bartelius", { exact: true });
+    await expect(bokForfattare).toBeVisible();
 
     // Markera som favorit
     const favBtn = page.getByTestId("star-The Winter Wars");
